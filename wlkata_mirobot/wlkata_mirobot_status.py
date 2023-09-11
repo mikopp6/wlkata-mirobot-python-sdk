@@ -1,8 +1,8 @@
 """
-Mirobot的状态信息, 包括:
-- `MirobotAngles`: 机械臂关节角度
-- `MirobotCartesians`: 机械臂末端在笛卡尔坐标系下的位姿
-- `MirobotStatus`: 机械臂系统状态
+Mirobot's status information includes:
+- `MirobotAngles`: Robotic arm joint angles
+- `MirobotCartesians`: Robotic arm end effector pose in Cartesian coordinates
+- `MirobotStatus`: Robotic arm system status
 """
 from dataclasses import dataclass, asdict, astuple, fields
 import numbers
@@ -211,154 +211,138 @@ class FeaturedDataClass(BasicDataClass):
 @dataclass
 class MirobotAngles(FeaturedDataClass):
     """
-    Mirobot关节角度
+    Mirobot joint angles
     """
-    a: float = None # 关节1的角度
-    b: float = None # 关节2的角度
-    c: float = None # 关节3的角度
-    x: float = None # 关节4的角度
-    y: float = None # 关节5的角度
-    z: float = None # 关节6的角度
-    d: float = None # 第七轴滑台的位置
+    a: float = None # Joint 1 angle
+    b: float = None # Joint 2 angle
+    c: float = None # Joint 3 angle
+    x: float = None # Joint 4 angle
+    y: float = None # Joint 5 angle
+    z: float = None # Joint 6 angle
+    d: float = None # Position of the seventh axis slider
     @property
     def a1(self):
-        """ 关节1的角度, 单位° """
+        """ Joint 1 angle, unit: ° """
         return self.a
 
     @property
     def a2(self):
-        """关节2的角度, 单位° """
+        """ Joint 2 angle, unit: ° """
         return self.b
 
     @property
     def a3(self):
-        """ 关节3的角度, 单位° """
+        """ Joint 3 angle, unit: ° """
         return self.c
 
     @property
     def a4(self):
-        """ 关节4的角度, 单位° """
+        """ Joint 4 angle, unit: ° """
         return self.x
 
     @property
     def a5(self):
-        """ 关节5的角度, 单位° """
+        """ Joint 5 angle, unit: ° """
         return self.y
 
     @property
     def a6(self):
-        """ 关节6的角度, 单位° """
+        """ Joint 6 angle, unit: ° """
         return self.z
 
     @property
     def rail(self):
-        """ 
-        第七轴也就是直线滑轨的平移
-        """
+        """ The seventh axis, which is the linear slider's translation """
         return self.d
 
     @property
     def joint1(self):
-        """
-        关节1的角度, 单位°
-        """ 
+        """ Joint 1 angle, unit: ° """
         return self.x
 
     @property
     def joint2(self):
-        """
-        关节2的角度, 单位°
-        """ 
+        """ Joint 2 angle, unit: ° """
         return self.y
 
     @property
     def joint3(self):
-        """
-        关节2的角度, 单位°
-        """ 
+        """ Joint 3 angle, unit: ° """
         return self.z
 
     @property
     def joint4(self):
-        """
-        关节4的角度, 单位°
-        """ 
+        """ Joint 4 angle, unit: ° """
         return self.a
     
     @property
     def joint5(self):
-        """
-        关节5的角度, 单位°
-        """ 
+        """ Joint 5 angle, unit: ° """
         return self.b
     
     @property
     def joint6(self):
-        """
-        关节4的角度, 单位°
-        """ 
+        """ Joint 6 angle, unit: ° """
         return self.c
 
 @dataclass
 class MirobotCartesians(FeaturedDataClass):
     """ 
-    笛卡尔坐标系下的位姿Pose, 包括
-    - 末端位置: (ex, ey, ez)
-    - 末端欧拉角: (raw, pitch, yaw)
+    Pose in Cartesian coordinates, including:
+    - End effector position: (ex, ey, ez)
+    - End effector Euler angles: (roll, pitch, yaw)
     """
-    x: float = None # 末端X坐标, 单位mm
-    y: float = None # 末端Y坐标, 单位mm
-    z: float = None # 末端Z坐标, 单位mm
-    a: float = None # 横滚角 Roll, 单位°
-    b: float = None # 俯仰角 Pitch, 单位°
-    c: float = None # 偏航角 Yaw, 单位°
+    x: float = None # End effector X-coordinate, unit: mm
+    y: float = None # End effector Y-coordinate, unit: mm
+    z: float = None # End effector Z-coordinate, unit: mm
+    a: float = None # Roll angle, unit: degrees
+    b: float = None # Pitch angle, unit: degrees
+    c: float = None # Yaw angle, unit: degrees
 
     @property
     def tx(self):
-        """ 末端X坐标, 单位mm """
+        """ End effector X-coordinate, unit: mm """
         return self.x
 
     @property
     def ty(self):
-        """ 末端Y坐标, 单位mm """
+        """ End effector Y-coordinate, unit: mm """
         return self.y
 
     @property
     def tz(self):
-        """ 末端Z坐标, 单位mm """
+        """ End effector Z-coordinate, unit: mm """
         return self.z
 
     
     @property
     def rx(self):
-        """ 横滚角,单位° """
+        """ Roll angle, unit: degrees """
         return self.a
 
     @property
     def ry(self):
-        """
-        俯仰角,单位°
-        """
+        """ Pitch angle, unit: degrees """
         return self.b
 
     @property
     def rz(self):
-        """ 偏航角,单位° """
+        """ Yaw angle, unit: degrees """
         return self.c
 
     @property
     def roll(self):
-        """ 横滚角,单位° """
+        """ Roll angle, unit: degrees """
         return self.a
     
     @property
     def pitch(self):
-        """ 俯仰角,单位° """
+        """ Pitch angle, unit: degrees """
         return self.b
     
     @property
     def yaw(self):
-        """ 偏航角,单位° """
+        """ Yaw angle, unit: degrees """
         return self.c
     
     def __str__(self):
@@ -368,19 +352,19 @@ class MirobotCartesians(FeaturedDataClass):
 class MirobotStatus(BasicDataClass):
     """ 
     A composite dataclass to hold all of Mirobot's trackable quantities.
-    Mirobot状态信息，用合成的数据结构来存储
+    Mirobot status information is stored using a composite data structure.
     """
-    # Mirobot状态符，字符串
+    # Mirobot status string
     state: str = ''
-    # 记录关节角度信息
+    # Record joint angle information
     angle: MirobotAngles = MirobotAngles()
-    # 存放笛卡尔坐标系下的位姿 xyz坐标与rpy角度
+    # Store pose information in Cartesian coordinates (xyz coordinates and rpy angles)
     cartesian: MirobotCartesians = MirobotCartesians()
-    # 气泵的PWM
+    # PWM for the air pump
     pump_pwm: int = None
-    # 电磁阀/爪子的PWM
+    # PWM for the solenoid valve/claw
     valve_pwm: int = None
-    # 当前的运动模式
-    # False:    笛卡尔坐标系模式
-    # True:     关节运动模式    
+    # Current motion mode
+    # False: Cartesian coordinate mode
+    # True: Joint motion mode
     motion_mode: bool = False

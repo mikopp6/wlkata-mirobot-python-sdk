@@ -1,82 +1,55 @@
-wlkata-mirobot-python
-=====================
 
-勤牛智能 Mirobot六自由度机械臂 Python SDK
+wlkata-mirobot-python-sdk
+=========================
 
-安装包
-------
+Translated to English with AI
 
-Windows
-~~~~~~~
+Wlkata Intelligent Mirobot 6-DOF Robotic Arm Python SDK
 
-通过pip安装
+Preparation
+-----------
 
-.. code:: bash
 
-   pip install wlkata-mirobot-python
+* 
+  Power on the robotic arm and connect it to the computer's USB port.
 
-从源码编译安装
+* 
+  Ensure that the computer has the CH340 driver installed.
 
-::
+* 
+  Install the Mirobot Python SDK.
 
-   python -m pip install .
+Quick Start
+-----------
 
-Ubuntu
-~~~~~~
-
-通过pip安装
-
-.. code:: bash
-
-   sudo pip3 install wlkata-mirobot-python
-
-从源码编译安装
-
-::
-
-   sudo python3 -m pip install .
-
-准备工作
---------
-
--  将机械臂上电并连接到电脑的USB端口处
-
--  电脑安装好了CH340的驱动
-
--  安装好了Mirobot的Python SDK
-
-快速入手
---------
-
-.. code:: python
+.. code-block:: python
 
    '''
-   机械臂腕关节的位置控制, 点控P2P(point to point)模式
+   Control the wrist joint of the robotic arm, point-to-point (P2P) mode
    '''
    import time
    from wlkata_mirobot import WlkataMirobot
 
-   # 创建机械臂 
+   # Create the robotic arm
    arm = WlkataMirobot()
-   # 回归机械零点 Homing (同步模式)
+   # Return the robotic arm to the home position (synchronous mode)
    arm.home()
 
-   print("运动到目标点 A")
+   print("Moving to target point A")
    arm.set_tool_pose(200,  20, 230)
-   print(f"当前末端在机械臂坐标系下的位姿 {arm.pose}")
+   print(f"Current end effector pose in the robotic arm coordinate system: {arm.pose}")
    time.sleep(1)
 
-   print("运动到目标点 B")
+   print("Moving to target point B")
    arm.set_tool_pose(200,  20, 150)
-   print(f"当前末端在机械臂坐标系下的位姿 {arm.pose}")
+   print(f"Current end effector pose in the robotic arm coordinate system: {arm.pose}")
    time.sleep(1)
 
-   print("运动到目标点 C, 指定末端的姿态角")
+   print("Moving to target point C, specifying the end effector's orientation angles")
    arm.set_tool_pose(150,  -20,  230, roll=30.0, pitch=0, yaw=45.0)
-   print(f"当前末端在机械臂坐标系下的位姿 {arm.pose}")
+   print(f"Current end effector pose in the robotic arm coordinate system: {arm.pose}")
 
-使用手册
---------
+User Manual
+-----------
 
-详细的API说明与示例代码， 请参阅
-``doc/WLKATA MIROBOT Python SDK使用手册/``
+For detailed API documentation and example code, please refer to ``doc/WLKATA MIROBOT Python SDK User Manual/``

@@ -1,5 +1,5 @@
 '''
-Mirobot GCode通信协议
+Mirobot GCode Communication Protocol
 '''
 import math
 from collections.abc import Collection
@@ -26,45 +26,45 @@ from .wlkata_mirobot_serial import WlkataMirobotSerial
 from .wlkata_mirobot_status import MirobotStatus, MirobotAngles, MirobotCartesians
 from .wlkata_mirobot_exceptions import ExitOnExceptionStreamHandler, MirobotError, MirobotAlarm, MirobotReset, MirobotAmbiguousPort, MirobotStatusError, MirobotResetFileError, MirobotVariableCommandError
 
-# 判断操作系统的类型
-# nt: 微软NT标准
+# Determine the Type of Operating System
+# nt: Microsoft NT Standard
 os_is_nt = os.name == 'nt'
-# Linux跟Mac都属于 posix 标准
-# posix: 类Unix 操作系统的可移植API
+# Both Linux and Mac belong to the POSIX standard.
+# POSIX: A portable API for Unix-like operating systems.
 os_is_posix = os.name == 'posix'
 
 
 class WlkataMirobotTool(Enum):
-	NO_TOOL = 0         # 没有工具
-	SUCTION_CUP = 1     # 气泵吸头
-	GRIPPER = 2         # 舵机爪子
-	FLEXIBLE_CLAW = 3   # 三指柔爪
+	NO_TOOL = 0         # No tools
+	SUCTION_CUP = 1     # Air pump suction head
+	GRIPPER = 2         # Servo gripper
+	FLEXIBLE_CLAW = 3   # Three-finger soft gripper
 	
 class WlkataMirobot(AbstractContextManager):
 	'''Wlkata Python SDK'''
-	# 气泵PWM值
+	# Air pump PWM value
 	AIR_PUMP_OFF_PWM_VALUE = 0
 	AIR_PUMP_BLOWING_PWM_VALUE = 500
 	AIR_PUMP_SUCTION_PWM_VALUE = 1000
-	# 电磁阀PWM值
+	# Solenoid valve PWM value
 	VALVE_OFF_PWM_VALUE = 65
 	VALVE_ON_PWM_VALUE = 40 
-	# 机械爪张开与闭合的PWM值
+	# PWM values for the mechanical claw opening and closing
 	GRIPPER_OPEN_PWM_VALUE = 40
 	GRIPPER_CLOSE_PWM_VALUE = 60
-	# 爪子间距范围(单位mm)
+	# Claw spacing range (in mm)
 	GRIPPER_SPACING_MIN = 0.0
 	GRIPPER_SPACING_MAX = 30.0
-	# 爪子运动学参数定义(单位mm)
-	GRIPPER_LINK_A = 9.5    # 舵机舵盘与中心线之间的距离
-	GRIPPER_LINK_B = 18.0   # 连杆的长度
-	GRIPPER_LINK_C = 3.0    # 平行爪向内缩的尺寸
+	# Claw kinematic parameters definition (in mm)
+	GRIPPER_LINK_A = 9.5    # Distance between servo disc and centerline
+	GRIPPER_LINK_B = 18.0   # Length of the connecting rod
+	GRIPPER_LINK_C = 3.0    # Size of parallel claws when retracted
 	
 	def __init__(self, *device_args, portname=None, debug=False, connection_type='serial', \
 		autoconnect=True, autofindport=True, exclusive=True, \
 		default_speed=2000, reset_file=None, wait_ok=False, **device_kwargs):
-		'''初始化'''
-  		# 设置日志等级
+		'''Initialization'''
+  		# Set log level
 		self.logger = logging.getLogger(__name__)
 		if (debug):
 			self.logger.setLevel(logging.DEBUG)
@@ -80,9 +80,9 @@ class WlkataMirobot(AbstractContextManager):
 
 		self.device = None
 		
-		# 创建串口连接
+		# Create serial connection
 		if connection_type.lower() in ('serial', 'ser'):
-			# 创建串口连接
+			# Create serial connection
 			serial_device_init_fn = WlkataMirobotSerial.__init__
 			args_names = serial_device_init_fn.__code__.co_varnames[:serial_device_init_fn.__code__.co_argcount]
 			args_dict = dict(zip(args_names, device_args))
@@ -94,37 +94,37 @@ class WlkataMirobot(AbstractContextManager):
 			args_dict['debug'] = debug
 			args_dict['logger'] = self.logger
 			args_dict['autofindport'] = autofindport
-			# 设置设备为串口接口
+			# Set device to serial interface
 			self.device = WlkataMirobotSerial(**args_dict)
-			# 设置端口名称
+			# Set port name
 			self.default_portname = self.device.default_portname
 
 		formatter = logging.Formatter(f"[{self.default_portname}] [%(levelname)s] %(message)s")
 		self.stream_handler.setFormatter(formatter)
-		# 读取重置文件
+		# Read reset file
 		self.reset_file = pkg_resources.read_text('wlkata_mirobot.resources', 'reset.xml') if reset_file is None else reset_file
-		# 设置调试模式
+		# Set debug mode
 		self._debug = debug
-		# 气泵PWM值
+		# Air pump PWM value
 		self.pump_pwm_values = [
 			self.AIR_PUMP_SUCTION_PWM_VALUE,
 			self.AIR_PUMP_BLOWING_PWM_VALUE,
 			self.AIR_PUMP_OFF_PWM_VALUE
 		]
-		# 电磁阀PWM值
+		# Solenoid valve PWM value
 		self.valve_pwm_values = [
 			self.VALVE_OFF_PWM_VALUE,
 			self.VALVE_ON_PWM_VALUE
 		]
-		# 末端默认运动速度
+		# End effector default movement speed
 		self.default_speed = default_speed
-		# 默认是否等待回传数据'ok'
+		# Whether to wait for 'ok' data to be returned by default
 		self.wait_ok = wait_ok
-		# Mirobot状态信息
+		# Mirobot status information
 		self.status = MirobotStatus()
-		# 设置末端工具
+		# Set end effector tool
 		self.tool = WlkataMirobotTool.NO_TOOL
-		# 自动连接
+		# Auto connect
 		if autoconnect:
 			self.connect()
 
@@ -141,7 +141,7 @@ class WlkataMirobot(AbstractContextManager):
 		self.disconnect()
 
 	def connect(self):
-		"""连接设备"""
+		"""Connect to the device"""
 		self.device.connect()
 
 	def disconnect(self):
@@ -154,29 +154,29 @@ class WlkataMirobot(AbstractContextManager):
 
 	@property
 	def debug(self):
-		'''获取当前的调试模式(是否开启)'''
+		'''Get the current debug mode (whether it's enabled)'''
 		return self._debug
 
 	@debug.setter
 	def debug(self, enable):
-		'''设置为调试模式'''
+		'''Set to debug mode'''
 		self._debug = bool(enable)
 		self.stream_handler.setLevel(logging.DEBUG if self._debug else logging.INFO)
 		self.device.setDebug(enable)
 
 	def send_msg(self, msg, var_command=False, disable_debug=False, terminator=os.linesep, wait_ok=None, wait_idle=False):
-		'''给Mirobot发送指令'''
+		'''Send commands to Mirobot'''
 		if self.is_connected:
-			# convert to str from bytes
-			# 将字符串转换为字节
+			# Convert to a string from bytes
+			# Convert a string to bytes
 			if isinstance(msg, bytes):
 				msg = str(msg, 'utf-8')
 			
-			# remove any newlines
+			# Remove any newlines
 			msg = msg.strip()
 
-			# check if this is supposed to be a variable command and fail if not
-			# 如果是数值设置指令，则进行合法性检测
+			# Check if this is supposed to be a variable command and fail if not
+			# If it's a numerical setting command, perform validation
 			if var_command and not re.fullmatch(r'\$\d+=[\d\.]+', msg):
 				self.logger.exception(MirobotVariableCommandError("Message is not a variable command: " + msg))
 
@@ -184,8 +184,8 @@ class WlkataMirobot(AbstractContextManager):
 				wait_ok = False
 			
 			# print(f"send_msg wait_ok = {wait_ok}")
-			# actually send the message
-			# 返回值是布尔值，代表是否正确发送
+			# Actually send the message
+			# Returns a boolean value representing whether it was sent correctly
 			ret = self.device.send(msg,
 									  disable_debug=disable_debug,
 									  terminator=os.linesep,
@@ -198,7 +198,7 @@ class WlkataMirobot(AbstractContextManager):
 			raise Exception('Mirobot is not Connected!')
 
 	def send_cmd_get_status(self, disable_debug=False):
-		'''获取Mirobot的状态信息, 回传的是状态字符'''
+		'''Get Mirobot's status information, returns status characters'''
 		instruction = '?'
 		ret = self.send_msg(instruction, disable_debug=disable_debug, wait_ok=False, wait_idle=False)
 		recv_str = self.device.serial_device.readline(timeout=0.10)
@@ -206,8 +206,8 @@ class WlkataMirobot(AbstractContextManager):
 		return recv_str
 
 	def get_status(self, disable_debug=False):
-		'''获取并更新Mirobot的状态'''
-		# 因为存在信息丢包的可能,因此需要多查询几次
+		'''Get and update Mirobot's status'''
+		# Because there is a possibility of message loss, multiple queries are needed
 		# print("Get Status ...")
 		status = None
 		while True:	
@@ -215,32 +215,32 @@ class WlkataMirobot(AbstractContextManager):
 			if "<" in msg_seg and ">" in msg_seg:
 				status_msg = msg_seg
 				try:
-					# print("开始解析状态字符串")
+					# print("Start parsing status string")
 					ret, status = self._parse_status(status_msg)
-					# print(f"状态解析: {ret}")
+					# print(f"Status parsing: {ret}")
 					if ret:
 						break
 				except Exception as e:
 					logging.error(e)
-			# 等待一会儿
+			# Wait for a while
 			time.sleep(0.1)
-		# 设置当前的状态
+		# Set the current status
 		self._set_status(status)
 		return status
 	
 	def _set_status(self, status):
-		'''设置新的状态'''
+		'''Set a new status'''
 		self.status = status
 
 	def _parse_status(self, msg):
 		'''
-		从字符串中解析Mirbot返回的状态信息, 提取有关变量赋值给机械臂对象
+		Parse the status information returned by Mirobot from a string, extract relevant variables, and assign them to the robotic arm object
 		'''
 		return_status = MirobotStatus()
-		# 用正则表达式进行匹配
+		# Match with regular expressions
 		state_regex = r'<([^,]*),Angle\(ABCDXYZ\):([-\.\d,]*),Cartesian coordinate\(XYZ RxRyRz\):([-.\d,]*),Pump PWM:(\d+),Valve PWM:(\d+),Motion_MODE:(\d)>'
-		# While re.search() searches for the whole string even if the string contains multi-lines and tries to find a match of the substring in all the lines of string.
-		# 注: 把re.match改为re.search
+		# While re.search() searches for the whole string even if the string contains multi-lines and tries to find a match of the substring in all the lines of the string.
+		# Note: Change re.match to re.search
 		regex_match = re.search(state_regex, msg)# re.fullmatch(state_regex, msg)
 		
 		if regex_match:
@@ -269,71 +269,72 @@ class WlkataMirobot(AbstractContextManager):
 		return False, None
 
 	def home(self, has_slider=False):
-		'''机械臂Homing'''
+		'''Robotic Arm Homing'''
 		if has_slider:
 			return self.home_7axis()
 		else:
 			return self.home_6axis()
 	
 	def home_slider(self):
-		'''滑台单独Homing'''
+		'''Slider Only Homing'''
 		return self.home_1axis(7)
 	
 	def home_1axis(self, axis_id):
-		'''单轴Homing'''
+		'''Single Axis Homing'''
 		if not isinstance(axis_id, int) or not (axis_id >= 1 and axis_id <= 7):
 			return False
 		msg = f'$h{axis_id}'
 		return self.send_msg(msg, wait_ok=False, wait_idle=True)
 	
 	def home_6axis(self):
-		'''六轴Homing'''
+		'''Six-Axis Homing'''
 		msg = f'$h'
 		return self.send_msg(msg, wait_ok=False, wait_idle=True)
 	
 	def home_6axis_in_turn(self):
-		'''六轴Homing, 各关节依次Homing'''
+		'''Six-Axis Homing, each joint homing sequentially'''
 		msg = f'$hh'
 		return self.send_msg(msg, wait_ok=False, wait_idle=True)
 	
 	def home_7axis(self):
-		'''七轴Homing(本体 + 滑台)'''
+		'''Seven-Axis Homing (Main Body + Slider)'''
 		msg = f'$h0'
 		return self.send_msg(msg, wait_ok=False, wait_idle=True)
 		
 	def unlock_all_axis(self):
-		'''解锁各轴锁定状态'''
+		'''Unlock the locked state of each axis'''
 		msg = 'M50'
 		return self.send_msg(msg, wait_ok=True, wait_idle=True)
 		
 	def go_to_zero(self):
-		'''回零-运动到名义上的各轴零点'''
+		'''Return to Zero - Move to nominal zero points for each axis'''
 		msg = 'M21 G90 G00 X0 Y0 Z0 A0 B0 C0 F2000'
 		return self.send_msg(msg, wait_ok=True, wait_idle=True)
 	
 	def set_speed(self, speed):
-		'''设置转速'''
-		# 转换为整数
+		'''Set speed'''
+		# Convert to an integer
 		speed = int(speed)
-		# 检查数值范围是否合法
+		# Check if the value range is legal
 		if speed <= 0 or speed > 3000:
 			self.logger.error(MirobotStatusError(f"Illegal movement speed {speed}"))
 			return False
-		# 发送指令
+		# Send a command
 		msg = f'F{speed}'
 		return self.send_msg(msg, wait_ok=None, wait_idle=None)
 	
 	def set_hard_limit(self, enable):
 		'''
-		开启硬件限位
+		Enable hardware limits.
 		'''
 		msg = f'$21={int(enable)}'
 		return self.send_msg(msg, var_command=True, wait_ok=None)
 
 	def set_soft_limit(self, enable):
-		'''开启软限位
-		注: 请谨慎使用
-  		'''
+		'''
+		Enable software limits
+		Note: Please use with caution
+		'''
 		msg = f'$20={int(enable)}'
 		return self.send_msg(msg, var_command=True, wait_ok=None)
 	
@@ -341,25 +342,25 @@ class WlkataMirobot(AbstractContextManager):
 		if value is None:
 			return value
 		if isinstance(value, float):
-			# 精确到小数点后两位数
+			# Accurate to two decimal places
 			return round(value , 2)
 		else:
 			return value
 	
 	def generate_args_string(self, instruction, pairings):
-		'''生成参数字符'''
+		'''Generate parameter characters'''
 		args = [f'{arg_key}{self.format_float_value(value)}' for arg_key, value in pairings.items() if value is not None]
 
 		return ' '.join([instruction] + args)
 	
 	def set_joint_angle(self, joint_angles, speed=None, is_relative=False, wait_ok=None):
 		'''
-		设置机械臂关节的角度
-		joint_angles 目标关节角度字典, key是关节的ID号, value是角度(单位°)
-			举例: {1:45.0, 2:-30.0}
+		Set the joint angles of the robotic arm
+		joint_angles: Target joint angle dictionary, where the key is the joint's ID, and the value is the angle (unit: °)
+		Example: {1: 45.0, 2: -30.0}
 		'''
 		for joint_i in range(1, 8):
-			# 补齐缺失的角度
+			# Fill in missing angles
 			if joint_i not in joint_angles:
 				joint_angles[joint_i] = None
 
@@ -367,7 +368,7 @@ class WlkataMirobot(AbstractContextManager):
 			b=joint_angles[5], c=joint_angles[6], d=joint_angles[7], is_relative=is_relative, speed=speed, wait_ok=wait_ok)
 
 	def go_to_axis(self, x=None, y=None, z=None, a=None, b=None, c=None, d=None, speed=None, is_relative=False, wait_ok=True):
-		'''设置关节角度/位置'''
+		'''Set joint angles/positions'''
 		instruction = 'M21 G90'  # X{x} Y{y} Z{z} A{a} B{b} C{c} F{speed}
 		if is_relative:
 			instruction = 'M21 G91'
@@ -382,7 +383,7 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 
 	def set_slider_posi(self, d, speed=None, is_relative=False, wait_ok=True):
-		'''设置滑台位置, 单位mm'''
+		'''Set slider position, unit: mm'''
 		if not is_relative:
 			return 	self.go_to_axis(d=d,
 									speed=speed, wait_ok=wait_ok)
@@ -391,21 +392,21 @@ class WlkataMirobot(AbstractContextManager):
 									speed=speed, wait_ok=wait_ok, is_relative=True)
 	
 	def set_conveyor_range(self, d_min=-30000, d_max=30000):
-		'''设置传送带的位移范围'''
-		# 约束范围
+		'''Set the displacement range of the conveyor belt'''
+		# Range constraint
 		if d_min < -30000:
 			d_min = -30000
 		if d_max > 30000:
 			d_min = 30000
-		# 设置传动带负方向最大行程
+		# Set the maximum travel distance in the negative direction of the conveyor belt
 		msg = f"$143={d_min}"
 		self.send_msg(msg, wait_ok=True, wait_idle=True)
-		# 设置传送带正方向最大行程
+		# Set the maximum travel distance in the positive direction of the conveyor belt
 		msg = f'$133={d_max}'
 		self.send_msg(msg, wait_ok=True, wait_idle=True)
 
 	def set_conveyor_posi(self, d, speed=None, is_relative=False, wait_ok=True):
-		'''设置传送带位置, 单位mm'''
+		'''Set the conveyor belt position, unit: mm'''
 		if not is_relative:
 			return 	self.go_to_axis(d=d,
 									speed=speed, wait_ok=wait_ok)
@@ -414,19 +415,19 @@ class WlkataMirobot(AbstractContextManager):
 									speed=speed, wait_ok=wait_ok, is_relative=True)
 	
 	def set_tool_pose(self, x=None, y=None, z=None, roll=None, pitch=None, yaw=None, mode='p2p', speed=None, is_relative=False, wait_ok=True):
-		'''设置工具位姿'''
+		'''Set tool pose'''
 		if mode == "p2p":
-			# 点控模式 Point To Point
+			# Point-to-point mode
 			self.p2p_interpolation(x=x, y=y, z=z, a=roll, b=pitch, c=yaw, speed=speed, is_relative=is_relative, wait_ok=wait_ok)
 		elif mode == "linear":
-			# 直线插补 Linera Interpolation
+			# Linear interpolation
 			self.linear_interpolation(x=x, y=y, z=z, a=roll, b=pitch, c=yaw, speed=speed,is_relative=is_relative, wait_ok=wait_ok)
 		else:
-			# 默认是点到点
+			# The default is point-to-point
 			self.p2p_interpolation(x=x, y=y, z=z, a=roll, b=pitch, c=yaw, speed=speed, wait_ok=wait_ok)
 	
 	def p2p_interpolation(self, x=None, y=None, z=None, a=None, b=None, c=None, speed=None, is_relative=False, wait_ok=None):
-		'''点到点插补'''
+		'''Point-to-point interpolation'''
 		instruction = 'M20 G90 G0'  # X{x} Y{y} Z{z} A{a} B{b} C{c} F{speed}
 		if is_relative:
 			instruction = 'M20 G91 G0'
@@ -442,7 +443,7 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 
 	def linear_interpolation(self, x=None, y=None, z=None, a=None, b=None, c=None, speed=None, is_relative=False, wait_ok=None):
-		'''直线插补'''
+		'''Linear interpolation'''
 		instruction = 'M20 G90 G1'  # X{x} Y{y} Z{z} A{a} B{b} C{c} F{speed}
 		if is_relative:
 			instruction = 'M20 G91 G1'
@@ -456,11 +457,11 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 	
 	def circular_interpolation(self, ex, ey, radius, is_cw=True, speed=None, wait_ok=None):
-		'''圆弧插补
-  		在XY平面上, 从当前点运动到相对坐标(ex, ey).半径为radius
-		`is_cw`决定圆弧是顺时针还是逆时针.
+		'''Circular interpolation
+		In the XY plane, move from the current point to relative coordinates (ex, ey). 
+		The radius is determined by is_cw, which determines whether the arc is clockwise or counterclockwise.
 		'''
-		# 判断是否合法
+		# Check if it is legal
 		distance = math.sqrt(ex**2 + ey**2)
 		if distance > (radius * 2):
 			self.logger.error(f'circular interpolation error, target posi is too far')
@@ -477,12 +478,12 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 	
 	def set_door_lift_distance(self, lift_distance):
-		'''设置门式轨迹规划抬起的高度'''
+		'''Set the height at which the gantry trajectory planning is lifted'''
 		msg = f"$49={lift_distance}"
 		return self.send_msg(msg, wait_ok=True, wait_idle=True)
 
 	def door_interpolation(self, x=None, y=None, z=None, a=None, b=None, c=None, speed=None, is_relative=False, wait_ok=None):
-		'''门式插补'''
+		'''Gantry interpolation'''
 		instruction = 'M20 G90 G05'  # X{x} Y{y} Z{z} A{a} B{b} C{c} F{speed}
 		if is_relative:
 			instruction = 'M20 G91 G05'
@@ -497,59 +498,55 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 
 	def set_tool_type(self, tool, wait_ok=True):
-		'''选择工具类型'''
+		'''Select tool type'''
 		self.tool = tool
 		self.logger.info(f"set tool {tool.name}")
-		# 获取工具的ID
+		# Get the ID of the tool
 		tool_id = tool.value
 
 		if type(tool_id) != int or not (tool_id >= 0 and tool_id <= 3):
-			self.logger.error(f"Unkown tool id {tool_id}")
+			self.logger.error(f"Unknown tool id {tool_id}")
 			return False
 		msg = f'$50={tool_id}'
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 	
 	def set_tool_offset(self, offset_x, offset_y, offset_z, wait_ok=True):
-		'''设置工具坐标系的偏移量'''
-		# 设置末端x轴偏移量
+		'''Set the offset of the tool coordinate system'''
+		# Set end effector x-axis offset
 		msg = f"$46={offset_x}"
 		ret_x = self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
-		# 设置末端y轴偏移量
+		# Set end effector y-axis offset
 		msg = f"$47={offset_y}"
 		ret_y = self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
-		# 设置末端z轴偏移量
+		# Set end effector z-axis offset
 		msg = f"$48={offset_z}"
 		ret_z = self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 		return ret_x and ret_y and ret_z
 
 	def pump_suction(self):
-		'''气泵吸气'''
+		'''Air pump suction'''
 		self.set_air_pump(self.AIR_PUMP_SUCTION_PWM_VALUE) 
 	
 	def pump_blowing(self):
-		'''气泵吹气'''
+		'''Air pump blowing'''
 		self.set_air_pump(self.AIR_PUMP_BLOWING_PWM_VALUE)
 	
 	def pump_on(self, is_suction=True):
-		"""
-		气泵开启, 吸气/吹气
-		"""
+		"""Air pump on, suction/blowing."""
 		if is_suction:
 			self.set_air_pump(self.AIR_PUMP_SUCTION_PWM_VALUE)
 		else:
 			self.set_air_pump(self.AIR_PUMP_BLOWING_PWM_VALUE) 
 	
 	def pump_off(self):
-		"""
-		气泵关闭, 电磁阀开启, 放气
-		"""
+		"""Air pump off, solenoid valve on, releasing air"""
 		self.set_air_pump(self.AIR_PUMP_OFF_PWM_VALUE, wait_ok=False)
 		self.set_valve(self.VALVE_ON_PWM_VALUE, wait_ok=False)
 		time.sleep(1)
 		self.set_valve(self.VALVE_OFF_PWM_VALUE, wait_ok=False)
 		
 	def set_air_pump(self, pwm, wait_ok=None):
-		'''设置气泵的PWM信号'''
+		'''Set the PWM signal of the air pump'''
 		if pwm not in self.pump_pwm_values:
 			self.logger.exception(ValueError(f'pwm must be one of these values: {self.pump_pwm_values}. Was given {pwm}.'))
 			pwm = self.AIR_PUMP_OFF_PWM_VALUE
@@ -557,7 +554,7 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 
 	def set_valve(self, pwm, wait_ok=None):
-		'''设置电磁阀的PWM'''
+		'''Set the PWM of the solenoid valve'''
 		if pwm not in self.valve_pwm_values:
 			self.logger.exception(ValueError(f'pwm must be one of these values: {self.valve_pwm_values}. Was given {pwm}.'))
 			pwm = self.VALVE_OFF_PWM_VALUE
@@ -565,44 +562,44 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 	
 	def gripper_inverse_kinematic(self, spacing_mm):
-		'''爪子逆向运动学'''
+		'''Claw inverse kinematics'''
 		d1 = (spacing_mm / 2) + self.GRIPPER_LINK_C - self.GRIPPER_LINK_A
 		theta = math.degrees(math.asin(d1/self.GRIPPER_LINK_B))
 		return theta
 	
 	def set_gripper_spacing(self, spacing_mm):
-		'''设置爪子间距'''
-		# 判断是否是合法的spacing约束下
+		'''Set claw spacing'''
+		# Check if it is a legal spacing constraint
 		spacing_mm = max(self.GRIPPER_SPACING_MIN, min(self.GRIPPER_SPACING_MAX, spacing_mm))
-		# 逆向运动学
+		# Inverse kinematics
 		theta = self.gripper_inverse_kinematic(spacing_mm)
 		angle_min = self.gripper_inverse_kinematic(self.GRIPPER_SPACING_MIN)
 		angle_max = self.gripper_inverse_kinematic(self.GRIPPER_SPACING_MAX)
-		# 旋转角度转换为PWM值
+		# Convert rotation angle to PWM value
 		ratio = ((theta - angle_min) / (angle_max - angle_min))
 		pwm = int(self.GRIPPER_CLOSE_PWM_VALUE + ratio * (self.GRIPPER_OPEN_PWM_VALUE - self.GRIPPER_CLOSE_PWM_VALUE))
-		# print(f"爪子逆向运动学 角度:{theta}  angle_min: {angle_min} angle_max: {angle_max} PWM: {pwm}")
-		# 设置爪子的PWM
+		# print(f"Claw inverse kinematics Angle: {theta} angle_min: {angle_min} angle_max: {angle_max} PWM: {pwm}")
+		# Set the claw's PWM
 		self.set_gripper(pwm)
 		
 	def gripper_open(self):
-		'''爪子开启'''
+		'''Open the claw'''
 		self.set_gripper(self.GRIPPER_OPEN_PWM_VALUE)
 	
 	def gripper_close(self):
-		'''爪子闭合'''
+		'''Close the claw'''
 		self.set_gripper(self.GRIPPER_CLOSE_PWM_VALUE)
 	
 	def set_gripper(self, pwm, wait_ok=None):
-		'''设置爪子的PWM'''
-		# 类型约束
+		'''Set the claw's PWM'''
+		# Type constraint
 		if isinstance(pwm, bool):
 			if pwm == True:
 				pwm = self.GRIPPER_CLOSE_PWM_VALUE
 			else:
 				pwm = self.GRIPPER_OPEN_PWM_VALUE
 		pwm = int(pwm)
-		# 数值约束
+		# Numeric constraint
 		lowerb = min([self.GRIPPER_OPEN_PWM_VALUE, self.GRIPPER_CLOSE_PWM_VALUE])
 		upperb = max([self.GRIPPER_OPEN_PWM_VALUE, self.GRIPPER_CLOSE_PWM_VALUE])
 		pwm = max(lowerb, min(upperb, pwm))
@@ -611,17 +608,17 @@ class WlkataMirobot(AbstractContextManager):
 		return self.send_msg(msg, wait_ok=wait_ok, wait_idle=True)
 	
 	def start_calibration(self, wait_ok=None):
-		'''开始进行机械臂标定'''
+		'''Start robotic arm calibration'''
 		instruction = 'M40'
 		return self.send_msg(instruction, wait_ok=wait_ok)
 
 	def finish_calibration(self, wait_ok=None):
-		'''完成机械臂标定'''
+		'''Complete robotic arm calibration'''
 		instruction = 'M41'
 		return self.send_msg(instruction, wait_ok=wait_ok)
 
 	def reset_configuration(self, reset_file=None, wait_ok=None):
-		'''重置机械臂的配置'''
+		'''Reset the robotic arm's configuration'''
 		output = {}
 
 		def send_each_line(file_lines):
@@ -633,7 +630,7 @@ class WlkataMirobot(AbstractContextManager):
 
 		if isinstance(reset_file, str) and '\n' in reset_file or \
 		   isinstance(reset_file, bytes) and b'\n' in reset_file:
-			# if we find that we have a string and it contains new lines,
+			# If we find that we have a string and it contains newlines,
 			send_each_line(reset_file.splitlines())
 
 		elif isinstance(reset_file, (str, Path)):
@@ -654,50 +651,50 @@ class WlkataMirobot(AbstractContextManager):
 		return output
 	@property
 	def state(self):
-		'''获取Mirobot状态码'''
+		'''Get Mirobot status code'''
 		return self.status.state
 
 	@property
 	def pose(self):
-		'''末端位姿6dof'''
+		'''End effector pose 6dof'''
 		return self.cartesian
 	
 	@property
 	def cartesian(self):
-		'''末端位姿6dof'''
+		'''End effector pose 6dof'''
 		return self.status.cartesian
 
 	@property
 	def angle(self):
-		'''关节角度'''
+		'''Joint angles'''
 		return self.status.angle
 
 	@property
 	def slider(self):
-		'''获取滑台(Mirobot第七轴)的位置'''
+		'''Get the slider (Mirobot seventh axis) position'''
 		return self.status.angle.d
 
 	@property
 	def conveyor(self):
-		'''获取传送带(Mirobot第七轴)的位置'''
+		'''Get the conveyor belt (Mirobot seventh axis) position'''
 		return self.status.angle.d
 
 	@property
 	def valve_pwm(self):
-		'''电磁阀的PWM'''
+		'''PWM of the solenoid valve'''
 		return self.status.valve_pwm
 
 	@property
 	def pump_pwm(self):
-		'''气泵的PWM'''
+		'''PWM of the air pump'''
 		return self.status.pump_pwm
 
 	@property
 	def gripper_pwm(self):
-		'''爪子的PWM'''
+		'''PWM of the claw'''
 		return self.status.pump_pwm
 	
 	@property
 	def motion_mode(self):
-		'''运动模式'''
+		'''Motion mode'''
 		return self.status.motion_mode

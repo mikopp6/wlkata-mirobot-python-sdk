@@ -1,104 +1,104 @@
 """
-Mirobot异常处理
+Mirobot Exception Handling
 """
 import logging
 
 class ExitOnExceptionStreamHandler(logging.StreamHandler):
-    """ 数据流存在问题, 信息不能正常的发送 """
+    """ There is an issue with the data flow; the information cannot be sent properly """
     def emit(self, record):
         super().emit(record)
-        # 当日志等级大于等于logging.ERROR 系统自动退出
+        # When the log level is greater than or equal to logging.ERROR, the system will exit automatically
         if record.levelno >= logging.ERROR:
             raise SystemExit(-1)
 
 class MirobotError(Exception):
     """ 
     An inplace class for throwing Mirobot errors. 
-    Mirobot错误
+    MirobotError
     """
     pass
 
 class MirobotAlarm(Exception):
     """ 
     An inplace class for throwing Mirobot alarms. 
-    Mirobot警报
+    MirobotAlarm
     """
     pass
 
 class MirobotReset(Exception):
     """ 
     An inplace class for when Mirobot resets.
-    Mirobot重置
+    MirobotReset
     """
     pass
 
 class MirobotStatusError(Exception):
     """ 
     An inplace class for when Mirobot's status message is unprocessable. 
-    Mirobot的状态信息无法被解析
+    Mirobot's status information cannot be parsed
     """
     pass
 
 class MirobotResetFileError(Exception):
     """ 
     An inplace class for when Mirobot has problems using the given reset file. 
-    Mirobot使用当前的重置配置文件发生错误
+    Mirobot encountered an error when trying to use the current reset configuration file
     """
     pass
 
 class MirobotVariableCommandError(Exception):
     """ 
     An inplace class for when Mirobot finds a command that does not match variable setting-command syntax.
-    Mirobot指令语法错误
+    Mirobot command syntax error
     """
     pass
 
 
 ######################################################################
-## 串口异常
+## Serial port exception
 ######################################################################
 
 class MirobotAmbiguousPort(Exception):
     """ 
     An inplace class for when the serial port is unconfigurable.
-    Mirobot串口无法配置错误
+    Mirobot serial port configuration error
     """
     pass
 
 class SerialDeviceReadError(Exception):
     """ 
     An inplace class for when DeviceSerial is unable to read the serial port
-    串口设备读取异常
+    Serial device read exception
     """
     pass
 
 class SerialDeviceOpenError(Exception):
     """ 
     An inplace class for when DeviceSerial is unable to open the serial port 
-    串口设备打开异常
+    Serial device open exception
     """
     pass
 
 class SerialDeviceCloseError(Exception):
     """ 
     An inplace class for when DeviceSerial is unable to close the serial port 
-    串口设备关闭错误
+    Serial device close error
     """
     pass
 
 class SerialDeviceWriteError(Exception):
     """ 
     An inplace class for when DeviceSerial is unable to write to the serial port 
-    串口写入错误
+    Serial write error
     """
     pass
 
 ######################################################################
-## 蓝牙异常
+## Bluetooth exception
 ######################################################################
 class InvalidBluetoothAddressError(Exception):
     """ 
     An inplace class for when an invalid Bluetooth address is given 
-    蓝牙地址错误
+    Bluetooth address error
     """
     pass
